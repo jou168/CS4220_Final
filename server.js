@@ -2,17 +2,19 @@ import express from 'express';
 
 import db from './services/db.js';
 import movies from './routes/movies.js';
-//import history from './routes/history.js';
+import history from './routes/history.js';
 
 const PORT = 5252;
 const app = express();
+
+app.use(express.json()); // To parse JSON request bodies
 
 app.get('/', (req, res) => {
     res.send("Welcome to the Movie Database");
 })
 
 app.use('/movies', movies)
-//app.use('/history', history)
+app.use('/history', history)
 
 const server = app.listen(PORT, async () => {
     await db.connect();
