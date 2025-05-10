@@ -22,4 +22,27 @@ router.get('/', async (req, res) => {
     }
 });
 
+
+router.get('/:id', async (req, res) => {
+    const movieId = req.params.id;
+    try {
+        const movieDetails = await api.searchById('movie', movieId);
+
+        try {
+          await db.insert("SearchHistorySelection", { 
+            identifier: movieId, 
+            details: movieDetails, 
+            timestamp: new Date() 
+          });
+        } catch(insertError) {
+          console.error("Error inserting into SearchHistorySelection:", insertError);
+        }
+        
+        res.json(movieDetails);
+    } catch (error) {
+        console.error("Error in /:id route:", error);
+        res.status(500).json({ error: 'Failed', message: error.message });
+    }
+});
+
 export default router;
