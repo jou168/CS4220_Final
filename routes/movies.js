@@ -20,8 +20,8 @@ router.get('/', async (req, res) => {
 
         // Save keyword to MongoDB
         try {
-            const insertResult = await db.insert("SearchHistoryKeyword", { keyword, timestamp: new Date() });
-            console.log(`Saved keyword: ${keyword} to SearchHistoryKeyword`, insertResult);
+            await db.insert("SearchHistoryKeyword", { keyword });
+            console.log(`Saved keyword: ${keyword} to SearchHistoryKeyword`);
         } catch (dbError) {
             console.error("Error saving keyword to MongoDB:", dbError);
         }
@@ -64,7 +64,6 @@ router.get('/', async (req, res) => {
                     display_name: selectedItem.title || selectedItem.name, // Store title/name
                     keyword, // Store the keyword that led to this selection
                     details: filteredDetails, // Store filtered details
-                    timestamp: new Date() 
                 });
                 console.log(`Saved selection: ${selectedItem.id} (${selectedItem.media_type}) from keyword: ${keyword}`);
             } catch (insertError) {
@@ -106,14 +105,13 @@ router.get('/:id', async (req, res) => {
 
         // Save selection to MongoDB with display name
         try {
-            const insertResult = await db.insert("SearchHistorySelection", { 
+            await db.insert("SearchHistorySelection", { 
                 identifier: id, 
                 media_type,
                 display_name: details.title || details.name, // Store title/name
                 details: filteredDetails, 
-                timestamp: new Date() 
             });
-            console.log(`Saved selection: ${id} (${media_type}) to SearchHistorySelection`, insertResult);
+            console.log(`Saved selection: ${id} (${media_type}) to SearchHistorySelection`);
         } catch (insertError) {
             console.error("Error inserting into SearchHistorySelection:", insertError);
         }
@@ -126,6 +124,7 @@ router.get('/:id', async (req, res) => {
 });
 
 export default router;
+
 
 
 
