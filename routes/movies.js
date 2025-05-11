@@ -42,35 +42,29 @@ router.get('/', async (req, res) => {
             const selectedItem = results[selectedIndex];
 
             // Fetch full details before saving selection
-            const fullDetails = await api.searchById(selectedItem.media_type, selectedItem.id);
+            const details = await api.searchById(selectedItem.media_type, selectedItem.id);
 
             // Extract only important details
-            const filteredDetails = {
-                id: fullDetails.id,
-                title: fullDetails.title || fullDetails.name,
+            const detailsToSave = {
+                id: details.id,
+                title: details.title || details.name,
                 media_type: selectedItem.media_type,
-                overview: fullDetails.overview,
-                release_date: fullDetails.release_date || fullDetails.first_air_date,
-                original_language: fullDetails.original_language, // Moved above vote_average
-                vote_average: fullDetails.vote_average,
-                vote_count: fullDetails.vote_count,
+                overview: details.overview,
+                release_date: details.release_date || details.first_air_date,
+                original_language: details.original_language, // Moved above vote_average
+                vote_average: details.vote_average,
+                vote_count: details.vote_count,
             };
 
-            // Save selection to MongoDB with keyword reference
+            // Save selection to MongoDB (only `details`)
             try {
-                await db.insert("SearchHistorySelection", { 
-                    identifier: selectedItem.id, 
-                    media_type: selectedItem.media_type,
-                    display_name: selectedItem.title || selectedItem.name, // Store title/name
-                    keyword, // Store the keyword that led to this selection
-                    details: filteredDetails, // Store filtered details
-                });
+                await db.insert("SearchHistorySelection", { details: detailsToSave });
                 console.log(`Saved selection: ${selectedItem.id} (${selectedItem.media_type}) from keyword: ${keyword}`);
             } catch (insertError) {
                 console.error("Error inserting into SearchHistorySelection:", insertError);
             }
 
-            return res.json(filteredDetails); // Return filtered details of the selected item
+            return res.json(detailsToSave); // Return filtered details of the selected item
         }
 
         res.json(formattedResults); // Return formatted results with only display and identifier
@@ -92,7 +86,7 @@ router.get('/:id', async (req, res) => {
         const details = await api.searchById(media_type, id);
 
         // Extract only important details
-        const filteredDetails = {
+        const detailsToSave = {
             id: details.id,
             title: details.title || details.name,
             media_type,
@@ -103,20 +97,15 @@ router.get('/:id', async (req, res) => {
             vote_count: details.vote_count,
         };
 
-        // Save selection to MongoDB with display name
+        // Save selection to MongoDB (only `details`)
         try {
-            await db.insert("SearchHistorySelection", { 
-                identifier: id, 
-                media_type,
-                display_name: details.title || details.name, // Store title/name
-                details: filteredDetails, 
-            });
+            await db.insert("SearchHistorySelection", { details: detailsToSave });
             console.log(`Saved selection: ${id} (${media_type}) to SearchHistorySelection`);
         } catch (insertError) {
             console.error("Error inserting into SearchHistorySelection:", insertError);
         }
 
-        res.json(filteredDetails);
+        res.json(detailsToSave);
     } catch (error) {
         console.error("Error fetching details:", error);
         res.status(500).json({ error: 'Failed', message: error.message });
@@ -124,6 +113,7 @@ router.get('/:id', async (req, res) => {
 });
 
 export default router;
+
 
 
 
