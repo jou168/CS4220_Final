@@ -38,6 +38,18 @@ router.get('/', async (req, res) => {
             // Fetch full details before saving selection
             const fullDetails = await api.searchById(selectedItem.media_type, selectedItem.id);
 
+            // Extract only important details
+            const filteredDetails = {
+                id: fullDetails.id,
+                title: fullDetails.title || fullDetails.name,
+                media_type: selectedItem.media_type,
+                overview: fullDetails.overview,
+                release_date: fullDetails.release_date || fullDetails.first_air_date,
+                vote_average: fullDetails.vote_average,
+                original_language: fullDetails.original_language,
+                vote_count: fullDetails.vote_count,
+            };
+
             // Save selection to MongoDB with keyword reference
             try {
                 await db.insert("SearchHistorySelection", { 
@@ -45,7 +57,7 @@ router.get('/', async (req, res) => {
                     media_type: selectedItem.media_type,
                     display_name: selectedItem.title || selectedItem.name, // Store title/name
                     keyword, // Store the keyword that led to this selection
-                    details: fullDetails, // Store full details
+                    details: filteredDetails, // Store filtered details
                     timestamp: new Date() 
                 });
                 console.log(`Saved selection: ${selectedItem.id} (${selectedItem.media_type}) from keyword: ${keyword}`);
@@ -53,7 +65,7 @@ router.get('/', async (req, res) => {
                 console.error("Error inserting into SearchHistorySelection:", insertError);
             }
 
-            return res.json(fullDetails); // Return full details of the selected item
+            return res.json(filteredDetails); // Return filtered details of the selected item
         }
 
         res.json(results); // Return all results if no index is provided
@@ -67,13 +79,24 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const { media_type } = req.query;
 
-    // Restrict media_type to only "movie"
-    if (media_type !== "movie") {
-        return res.status(400).json({ error: 'Invalid media type. Only "movie" is allowed.' });
+    if (!media_type) {
+        return res.status(400).json({ error: 'Media type parameter is required (movie, tv, person)' });
     }
 
     try {
         const details = await api.searchById(media_type, id);
+
+        // Extract only important details
+        const filteredDetails = {
+            id: details.id,
+            title: details.title || details.name,
+            media_type,
+            overview: details.overview,
+            release_date: details.release_date || details.first_air_date,
+            vote_average: details.vote_average,
+            original_language: details.original_language,
+            vote_count: details.vote_count,
+        };
 
         // Save selection to MongoDB with display name
         try {
@@ -81,7 +104,7 @@ router.get('/:id', async (req, res) => {
                 identifier: id, 
                 media_type,
                 display_name: details.title || details.name, // Store title/name
-                details, 
+                details: filteredDetails, 
                 timestamp: new Date() 
             });
             console.log(`Saved selection: ${id} (${media_type}) to SearchHistorySelection`, insertResult);
@@ -89,7 +112,7 @@ router.get('/:id', async (req, res) => {
             console.error("Error inserting into SearchHistorySelection:", insertError);
         }
 
-        res.json(details);
+        res.json(filteredDetails);
     } catch (error) {
         console.error("Error fetching details:", error);
         res.status(500).json({ error: 'Failed', message: error.message });
@@ -97,6 +120,9 @@ router.get('/:id', async (req, res) => {
 });
 
 export default router;
+
+
+
 
 
 
