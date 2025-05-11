@@ -8,6 +8,8 @@ const PORT = 5252;
 const app = express();
 
 app.use(express.json()); // To parse JSON request bodies
+// Enable pretty-printing for JSON responses (can be deleted as localhost already provides this function. this just makes it default)
+app.set('json spaces', 2);
 
 app.get('/', (req, res) => {
     res.send("Welcome to the Movie Database");
