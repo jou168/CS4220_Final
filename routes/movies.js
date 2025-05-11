@@ -26,10 +26,16 @@ router.get('/', async (req, res) => {
             console.error("Error saving keyword to MongoDB:", dbError);
         }
 
+        // Format response to match project requirements
+        const formattedResults = results.map(item => ({
+            display: item.title || item.name, // Use title for movies, name for TV shows/people
+            identifier: item.id
+        }));
+
         // If index is provided, return only the selected result **and save selection**
         if (index !== undefined) {
             const selectedIndex = parseInt(index, 10);
-            if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= results.length) {
+            if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= formattedResults.length) {
                 return res.status(400).json({ error: 'Invalid index. Must be within range of results.' });
             }
 
@@ -45,8 +51,8 @@ router.get('/', async (req, res) => {
                 media_type: selectedItem.media_type,
                 overview: fullDetails.overview,
                 release_date: fullDetails.release_date || fullDetails.first_air_date,
+                original_language: fullDetails.original_language, // Moved above vote_average
                 vote_average: fullDetails.vote_average,
-                original_language: fullDetails.original_language,
                 vote_count: fullDetails.vote_count,
             };
 
@@ -68,7 +74,7 @@ router.get('/', async (req, res) => {
             return res.json(filteredDetails); // Return filtered details of the selected item
         }
 
-        res.json(results); // Return all results if no index is provided
+        res.json(formattedResults); // Return formatted results with only display and identifier
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
@@ -93,8 +99,8 @@ router.get('/:id', async (req, res) => {
             media_type,
             overview: details.overview,
             release_date: details.release_date || details.first_air_date,
+            original_language: details.original_language, // Moved above vote_average
             vote_average: details.vote_average,
-            original_language: details.original_language,
             vote_count: details.vote_count,
         };
 
@@ -120,6 +126,7 @@ router.get('/:id', async (req, res) => {
 });
 
 export default router;
+
 
 
 
