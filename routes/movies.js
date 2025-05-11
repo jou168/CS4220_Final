@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     try {
-        const { keyword, index } = req.query;
+        const { keyword } = req.query;
 
         if (!keyword) {
             return res.status(400).json({ error: 'Keyword parameter is required' });
@@ -28,44 +28,9 @@ router.get('/', async (req, res) => {
 
         // Format response to match project requirements
         const formattedResults = results.map(item => ({
-            display: item.title || item.name, // Use title for movies, name for TV shows/people
+            display: `${item.title || item.name} (${formatMediaType(item.media_type)})`, // Append media type
             identifier: item.id
         }));
-
-        // If index is provided, return only the selected result **and save selection**
-        if (index !== undefined) {
-            const selectedIndex = parseInt(index, 10);
-            if (isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= formattedResults.length) {
-                return res.status(400).json({ error: 'Invalid index. Must be within range of results.' });
-            }
-
-            const selectedItem = results[selectedIndex];
-
-            // Fetch full details before saving selection
-            const details = await api.searchById(selectedItem.media_type, selectedItem.id);
-
-            // Extract only important details
-            const detailsToSave = {
-                id: details.id,
-                title: details.title || details.name,
-                media_type: selectedItem.media_type,
-                overview: details.overview,
-                release_date: details.release_date || details.first_air_date,
-                original_language: details.original_language, // Moved above vote_average
-                vote_average: details.vote_average,
-                vote_count: details.vote_count,
-            };
-
-            // Save selection to MongoDB (only `details`)
-            try {
-                await db.insert("SearchHistorySelection", { details: detailsToSave });
-                console.log(`Saved selection: ${selectedItem.id} (${selectedItem.media_type}) from keyword: ${keyword}`);
-            } catch (insertError) {
-                console.error("Error inserting into SearchHistorySelection:", insertError);
-            }
-
-            return res.json(detailsToSave); // Return filtered details of the selected item
-        }
 
         res.json(formattedResults); // Return formatted results with only display and identifier
     } catch (err) {
@@ -113,6 +78,21 @@ router.get('/:id', async (req, res) => {
 });
 
 export default router;
+
+// Helper function to format media type
+function formatMediaType(media_type) {
+    switch (media_type) {
+        case "movie":
+            return "Movie";
+        case "tv":
+            return "TV Show";
+        case "person":
+            return "Person";
+        default:
+            return "Unknown";
+    }
+}
+
 
 
 
