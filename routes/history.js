@@ -25,10 +25,9 @@ router.get('/', async (req, res) => {
         // Format response based on type
         const cleanHistory = type === 'keywords'
             ? history.map(({ _id, details, ...rest }) => rest) // Remove `_id` and `details` from keywords
-            : history.map(({ _id, identifier, details, ...rest }) => ({
-                ...rest,
+            : history.map(({ _id, identifier, display_name, media_type, details }) => ({
                 details: details ? Object.fromEntries(Object.entries(details).filter(([key]) => key !== 'id')) : {},
-            })); // Remove `_id`, `identifier`, and `id` from selections
+            })); // Remove `_id`, `identifier`, `display_name`, `media_type`, and `id` from selections
 
         res.json(cleanHistory);
     } catch (error) {
@@ -38,6 +37,7 @@ router.get('/', async (req, res) => {
 });
 
 export default router;
+
 
 
 
