@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
             console.error("Error saving keyword to MongoDB:", dbError);
         }
 
-        // Format response to match project requirements
+        // Format response to match project requirements (Presented by Bryam)
         const formattedResults = results.map(item => ({
             display: `${item.title || item.name} (${formatMediaType(item.media_type)})`, // Append media type
             identifier: item.id
@@ -79,7 +79,7 @@ router.get('/:id', async (req, res) => {
 
 export default router;
 
-// Helper function to format media type
+// Helper function to format media type (Presented by Bryam)
 function formatMediaType(media_type) {
     switch (media_type) {
         case "movie":
