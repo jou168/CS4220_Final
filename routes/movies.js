@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
             media_type,
             overview: details.overview,
             release_date: details.release_date || details.first_air_date,
-            original_language: details.original_language, // Moved above vote_average
+            original_language: details.original_language, 
             vote_average: details.vote_average,
             vote_count: details.vote_count,
         };
@@ -85,7 +85,7 @@ function formatMediaType(media_type) {
         case "movie":
             return "Movie";
         case "tv":
-            return "TV Show";
+            return "TV";
         case "person":
             return "Person";
         default:
